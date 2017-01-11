@@ -4,6 +4,8 @@ import scipy.linalg as la
 class DIIS(object):
   """DIIS extrapolation class.
 
+  This uses the CROP algorithm, which I found in a `JCTC article`_.
+
   Attributes:
     options (dict): Options controlling the DIIS extrapolation, such as the
       minimum and maximum number of entries to use.
@@ -11,10 +13,13 @@ class DIIS(object):
       extrapolated.
     errors_list (list of tuple of array-like objects): The residuals of the
       variables to be extrapolated.
+
+  .. _JCTC article:
+    http://doi.org/10.1021/ct501114q
   """
 
   _option_defaults = {
-    'n_max': 6,
+    'n_max': 3,
     'n_min': 3
   }
 
@@ -51,15 +56,19 @@ class DIIS(object):
     """Compute the DIIS extrapolation.
 
     Returns:
-      tuple of array-like objects: The list of extrapolated arrays.
+      tuple: The last element is the norm of the residual.  The remaining
+        elements are the extrapolated arrays.
     """
     if len(self.arrays_list) < self.options['n_min']:
       return self.arrays_list[-1] + (1.0,)
     coeffs, error_norm = self._get_extrapolation_coefficients()
     arrays = tuple(sum(coeff * array for coeff, array in zip(coeffs, arrays))
                    for arrays in zip(*self.arrays_list))
+    errors = tuple(sum(coeff * error for coeff, error in zip(coeffs, errors))
+                   for errors in zip(*self.errors_list))
+    self.arrays_list[-1] = arrays
+    self.errors_list[-1] = errors
     return arrays + (error_norm,)
-    
 
   def _get_extrapolation_coefficients(self):
     """Compute DIIS extrapolation coefficients.
