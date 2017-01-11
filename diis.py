@@ -1,7 +1,8 @@
 import numpy as np
 import scipy.linalg as la
+from .interface import DIISInterface
 
-class DIIS(object):
+class DIIS(DIISInterface):
   """DIIS extrapolation class.
 
   Attributes:
@@ -92,3 +93,4 @@ class DIIS(object):
     # Return the extrapolation coefficients and the norm of the error
     coeffs, error_norm = x[:n], x[n]
     return coeffs, error_norm
+

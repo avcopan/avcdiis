@@ -1,20 +1,22 @@
 import numpy as np
 import scipy.linalg as la
+from .interface import DIISInterface
 
-class DIIS(object):
-  """DIIS extrapolation class.
+class CROP(DIISInterface):
+  """CROP extrapolation class.
 
-  This uses the CROP algorithm, which I found in a `JCTC article`_.
+  This uses the CROP algorithm for accelerating DIIS convergence, which I found
+  in a `JCTC article by Ettenhuber and Jorgensen`_.
 
   Attributes:
-    options (dict): Options controlling the DIIS extrapolation, such as the
+    options (dict): Options controlling the CROP extrapolation, such as the
       minimum and maximum number of entries to use.
     arrays_list (list of tuple of array-like objects): The variables to be
       extrapolated.
     errors_list (list of tuple of array-like objects): The residuals of the
       variables to be extrapolated.
 
-  .. _JCTC article:
+  .. _JCTC article by Ettenhuber and Jorgensen:
     http://doi.org/10.1021/ct501114q
   """
 
@@ -24,19 +26,19 @@ class DIIS(object):
   }
 
   def __init__(self, **options):
-    """Initialize DIIS object.
+    """Initialize CROP object.
 
     Args:
       n_max (:obj:`int`, optional): Maximum number of vectors to store.
       n_min (:obj:`int`, optional): Minimum number of vectors to store.
     """
-    self.options = DIIS._option_defaults
+    self.options = CROP._option_defaults
     self.options.update(options)
     self.arrays_list = []
     self.errors_list = []
 
   def add_entry(self, *array_error_pairs):
-    """Add an entry to the DIIS extrapolation.
+    """Add an entry to the CROP extrapolation.
 
     Drops entries to make room and then appends the new entry.
 
@@ -53,7 +55,7 @@ class DIIS(object):
     self.errors_list.append(errors)
 
   def extrapolate(self):
-    """Compute the DIIS extrapolation.
+    """Compute the CROP extrapolation.
 
     Returns:
       tuple: The last element is the norm of the residual.  The remaining
@@ -71,7 +73,7 @@ class DIIS(object):
     return arrays + (error_norm,)
 
   def _get_extrapolation_coefficients(self):
-    """Compute DIIS extrapolation coefficients.
+    """Compute CROP extrapolation coefficients.
 
     Follows the notation of Pulay's `Improved SCF Convergence Acceleration`_.
 
