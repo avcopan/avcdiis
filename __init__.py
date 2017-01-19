@@ -1,2 +1,2 @@
-from interface import DIISInterface
-from diis import DIIS
+from .interface import DIISInterface
+from .diis import DIIS
