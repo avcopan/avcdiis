@@ -1,5 +1,6 @@
 import numpy as np
 import scipy.linalg as la
+import warnings
 from .interface import DIISInterface
 
 class DIIS(DIISInterface):
@@ -14,20 +15,20 @@ class DIIS(DIISInterface):
       variables to be extrapolated.
   """
 
-  _option_defaults = {
-    'n_max': 6,
-    'n_min': 3
-  }
-
-  def __init__(self, **options):
+  def __init__(self, n_min=3, n_max=7, skip_bad_steps=False):
     """Initialize DIIS object.
 
     Args:
       n_max (:obj:`int`, optional): Maximum number of vectors to store.
       n_min (:obj:`int`, optional): Minimum number of vectors to store.
+      skip_bad_steps (bool): Skip extrapolation when the equations become
+        ill-conditioned?
     """
-    self.options = DIIS._option_defaults
-    self.options.update(options)
+    self.options = {
+      'n_max': n_max,
+      'n_min': n_min,
+      'skip_bad_steps': skip_bad_steps
+    }
     self.arrays_list = []
     self.errors_list = []
 
@@ -88,9 +89,14 @@ class DIIS(DIISInterface):
     b = np.array([0.] * n + [-1.])
 
     # Solve A * x = b
-    x = la.solve(A, b)
+    with warnings.catch_warnings(record=True) as w:
+      x = la.solve(A, b)
+      # Return the extrapolation coefficients and the norm of the error
+      coeffs, error_norm = x[:n], x[n]
+    if w and self.options['skip_bad_steps']:
+      coeffs[:] = 0.0
+      coeffs[-1] = 1.0
+      error_norm = float('NaN')
 
-    # Return the extrapolation coefficients and the norm of the error
-    coeffs, error_norm = x[:n], x[n]
     return coeffs, error_norm
 
